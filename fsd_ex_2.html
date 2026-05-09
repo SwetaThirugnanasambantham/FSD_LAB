@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SwiftCart</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 40px;
+    background: #ffffff;
+}
+
+/* Header */
+h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.tagline {
+    margin-top: 6px;
+    color: #555;
+}
+
+/* Layout */
+.main {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+/* Panels */
+.panel {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+/* Products */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.product-card {
+    border: 1px solid #eee;
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    margin-bottom: 12px;
+}
+
+.product-card h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+}
+
+.product-card p {
+    font-size: 13px;
+    color: #555;
+    margin: 0 0 10px;
+}
+
+.price {
+    font-weight: bold;
+    margin-bottom: 14px;
+}
+
+.add-btn {
+    margin-top: auto;
+    background: #ffd814;
+    border: none;
+    padding: 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    background: #f7ca00;
+}
+
+/* Cart */
+.cart-empty {
+    color: red;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.qty button {
+    border: none;
+    background: #eee;
+    padding: 2px 8px;
+    cursor: pointer;
+}
+
+.remove-btn {
+    border: none;
+    background: none;
+    color: red;
+    cursor: pointer;
+    margin-left: 6px;
+}
+
+.summary {
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.summary div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.total {
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>SwiftCart</h1>
+<div class="tagline">Shop fast. Pay smarter.</div>
+
+<div class="main">
+
+    <!-- PRODUCTS -->
+    <div class="panel">
+        <h2>Products</h2>
+        <div class="products-grid" id="products"></div>
+    </div>
+
+    <!-- CART -->
+    <div class="panel">
+        <h2>Cart</h2>
+        <div id="cart"></div>
+
+        <div class="summary">
+            <div>
+                <span>Subtotal</span>
+                <span>₹<span id="subtotal">0</span></span>
+            </div>
+            <div>
+                <span>GST (18%)</span>
+                <span>₹<span id="tax">0</span></span>
+            </div>
+            <div class="total">
+                <span>Total</span>
+                <span>₹<span id="total">0</span></span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const GST_RATE = 0.18;
+
+const products = [
+    { id: 1, name: "Laptop", desc: "Intel i5 | 16GB RAM | 512GB SSD", price: 50000, img: "https://img-prd-pim.poorvika.com/cdn-cgi/image/width=500,height=500,quality=75/product/HP-Intel-Core-i5-12th-Gen-Windows-11-Home-Laptop-15s-fq5329TU-Natural-Silver-8GB-512GB-right-view.png" },
+    { id: 2, name: "Mobile Phone", desc: "6.5 inch | 5000mAh Battery", price: 20000, img: "https://doiqgxrhp4iii.cloudfront.net/A52%20(1).jpg" },
+    { id: 3, name: "Headphones", desc: "Wireless | Noise Cancellation", price: 3000, img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTS1Ni6nVimBRT_iC14rdcKGloOcSEXmZjjg&s" },
+    { id: 4, name: "Smart Watch", desc: "Fitness | Heart Rate", price: 4500, img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxhrfPrS8R061Ux0WaxIs-sAKyBQ5vyN4pYA&s" },
+    { id: 5, name: "Bluetooth Speaker", desc: "Portable | Deep Bass", price: 2800, img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSN1Kz5b1R0CCZn8aBdK5s--eUSQw86m6ja_A&s" },
+    { id: 6, name: "Wireless Mouse", desc: "Ergonomic | Long Battery", price: 1200, img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGzO9CipEpr0ged7Ow9vKr4hAriIN8GeDjNw&s" }
+];
+
+const cart = {};
+
+const productsDiv = document.getElementById("products");
+const cartDiv = document.getElementById("cart");
+const subtotalEl = document.getElementById("subtotal");
+const taxEl = document.getElementById("tax");
+const totalEl = document.getElementById("total");
+
+/* Render Products */
+products.forEach(p => {
+    productsDiv.innerHTML += `
+        <div class="product-card">
+            <img src="${p.img}">
+            <h3>${p.name}</h3>
+            <p>${p.desc}</p>
+            <div class="price">₹${p.price}</div>
+            <button class="add-btn" onclick="add(${p.id})">Add to Cart</button>
+        </div>
+    `;
+});
+
+function add(id) {
+    cart[id] = cart[id] ? cart[id] + 1 : 1;
+    renderCart();
+}
+
+function changeQty(id, value) {
+    cart[id] += value;
+    if (cart[id] <= 0) delete cart[id];
+    renderCart();
+}
+
+function removeItem(id) {
+    delete cart[id];
+    renderCart();
+}
+
+function renderCart() {
+    cartDiv.innerHTML = "";
+    let subtotal = 0;
+
+    if (Object.keys(cart).length === 0) {
+        cartDiv.innerHTML = `<div class="cart-empty">Cart is empty</div>`;
+        subtotalEl.textContent = taxEl.textContent = totalEl.textContent = 0;
+        return;
+    }
+
+    for (let id in cart) {
+        const p = products.find(x => x.id == id);
+        const qty = cart[id];
+        subtotal += p.price * qty;
+
+        cartDiv.innerHTML += `
+            <div class="cart-item">
+                <span>${p.name}</span>
+                <div class="qty">
+                    <button onclick="changeQty(${id}, -1)">-</button>
+                    ${qty}
+                    <button onclick="changeQty(${id}, 1)">+</button>
+                    <button class="remove-btn" onclick="removeItem(${id})">Remove</button>
+                </div>
+            </div>
+        `;
+    }
+
+    const tax = Math.round(subtotal * GST_RATE);
+    const total = subtotal + tax;
+
+    subtotalEl.textContent = subtotal;
+    taxEl.textContent = tax;
+    totalEl.textContent = total;
+}
+</script>
+
+</body>
+</html>

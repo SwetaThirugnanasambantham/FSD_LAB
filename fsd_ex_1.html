@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Online Voting Registration</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    font-family:"Segoe UI",Arial;
+}
+
+body{
+    margin:0;
+    background:linear-gradient(135deg,#e3f2fd,#f5f7fa);
+    height:100vh;
+    overflow:hidden; /* NO SCROLL */
+}
+
+/* HEADER */
+.header{
+    background:#0d47a1;
+    color:white;
+    padding:10px;
+    text-align:center;
+    font-size:18px;
+    font-weight:600;
+}
+
+/* CONTAINER */
+.container{
+    max-width:500px;
+    margin:18px auto;
+    background:white;
+    padding:18px 22px;
+    border-radius:10px;
+    box-shadow:0 10px 24px rgba(0,0,0,.12);
+}
+
+h2{
+    text-align:center;
+    margin:6px 0 14px;
+    color:#0d47a1;
+    font-size:20px;
+}
+
+/* FORM */
+.field{
+    margin-bottom:8px;
+}
+
+label{
+    font-size:13px;
+    font-weight:600;
+}
+
+input,textarea{
+    width:100%;
+    padding:7px 9px;
+    margin-top:4px;
+    border-radius:5px;
+    border:1px solid #cfd8dc;
+    font-size:13px;
+}
+
+textarea{
+    resize:none;
+    height:42px;
+}
+
+input:focus,textarea:focus{
+    outline:none;
+    border-color:#1a73e8;
+}
+
+.error{
+    font-size:11px;
+    color:#d32f2f;
+    height:12px;
+}
+
+.success{border:1px solid #2e7d32;}
+.invalid{border:1px solid #d32f2f;}
+
+button{
+    width:100%;
+    padding:9px;
+    margin-top:6px;
+    background:#1a73e8;
+    color:white;
+    border:none;
+    border-radius:5px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+button:disabled{
+    background:#9e9e9e;
+    cursor:not-allowed;
+}
+
+/* SUCCESS SCREEN */
+#successScreen{
+    display:none;
+    text-align:center;
+}
+
+#successScreen h2{
+    color:#2e7d32;
+}
+
+#finalVoterId{
+    font-size:24px;
+    font-weight:bold;
+    color:#0d47a1;
+    margin-top:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">National Online Voting Portal</div>
+
+<!-- FORM -->
+<div class="container" id="formContainer">
+<h2>Voter Registration</h2>
+
+<form id="form" novalidate>
+
+<div class="field">
+<label>Full Name</label>
+<input id="name">
+<div class="error" id="nameErr"></div>
+</div>
+
+<div class="field">
+<label>Date of Birth</label>
+<input id="dob" type="date">
+<div class="error" id="dobErr"></div>
+</div>
+
+<div class="field">
+<label>Aadhaar Number</label>
+<input id="aadhaar" maxlength="12">
+<div class="error" id="aadhaarErr"></div>
+</div>
+
+<div class="field">
+<label>Voter ID</label>
+<input id="voter">
+<div class="error" id="voterErr"></div>
+</div>
+
+<div class="field">
+<label>Mobile Number</label>
+<input id="mobile" maxlength="10">
+<div class="error" id="mobileErr"></div>
+</div>
+
+<div class="field">
+<label>Residential Address</label>
+<textarea id="address"></textarea>
+<div class="error" id="addressErr"></div>
+</div>
+
+<div class="field">
+<label>Email</label>
+<input id="email">
+<div class="error" id="emailErr"></div>
+</div>
+
+<div class="field">
+<label>Password</label>
+<input id="password" type="password">
+<div class="error" id="passwordErr"></div>
+</div>
+
+<button id="submitBtn" disabled>Register</button>
+</form>
+</div>
+
+<!-- SUCCESS -->
+<div class="container" id="successScreen">
+<h2>✔ Voting Registration Successful</h2>
+<p>Your Voter ID</p>
+<div id="finalVoterId"></div>
+</div>
+
+<script>
+const submitBtn=document.getElementById("submitBtn");
+let validState={};
+
+function setValid(el,id){
+    el.className="success";
+    document.getElementById(id).innerText="";
+    validState[id]=true;
+    checkForm();
+}
+
+function setInvalid(el,id,msg){
+    el.className="invalid";
+    document.getElementById(id).innerText=msg;
+    validState[id]=false;
+    checkForm();
+}
+
+function checkForm(){
+    submitBtn.disabled=!Object.values(validState).every(v=>v);
+}
+
+/* Input restrictions */
+aadhaar.oninput=()=>aadhaar.value=aadhaar.value.replace(/\D/g,"");
+mobile.oninput=()=>mobile.value=mobile.value.replace(/\D/g,"");
+voter.oninput=()=>voter.value=voter.value.toUpperCase();
+
+/* Validations */
+name.oninput=()=>/^[A-Za-z ]{3,}$/.test(name.value)
+?setValid(name,"nameErr"):setInvalid(name,"nameErr","Invalid name");
+
+dob.onchange=()=>{
+let age=new Date().getFullYear()-new Date(dob.value).getFullYear();
+age>=18?setValid(dob,"dobErr"):setInvalid(dob,"dobErr","18+ only");
+};
+
+aadhaar.onblur=()=>/^[0-9]{12}$/.test(aadhaar.value)
+?setValid(aadhaar,"aadhaarErr"):setInvalid(aadhaar,"aadhaarErr","12 digits");
+
+voter.onblur=()=>/^[A-Z]{3}[0-9]{7}$/.test(voter.value)
+?setValid(voter,"voterErr"):setInvalid(voter,"voterErr","ABC1234567");
+
+mobile.onblur=()=>/^[6-9][0-9]{9}$/.test(mobile.value)
+?setValid(mobile,"mobileErr"):setInvalid(mobile,"mobileErr","Invalid");
+
+address.onblur=()=>/^[A-Za-z0-9\s,\/\-]{10,}$/.test(address.value)
+?setValid(address,"addressErr"):setInvalid(address,"addressErr","Invalid");
+
+email.onblur=()=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)
+?setValid(email,"emailErr"):setInvalid(email,"emailErr","Invalid");
+
+password.oninput=()=>/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password.value)
+?setValid(password,"passwordErr"):setInvalid(password,"passwordErr","Weak");
+
+/* Submit */
+form.onsubmit=e=>{
+e.preventDefault();
+formContainer.style.display="none";
+successScreen.style.display="block";
+finalVoterId.innerText=voter.value;
+};
+</script>
+
+</body>
+</html>
+
+
+
